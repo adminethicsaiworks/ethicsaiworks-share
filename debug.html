@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Share Debug - EthicsAIworks</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FF462D;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #FF462D;
+            padding-bottom: 10px;
+        }
+        .meta-tag {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #0066CC;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .test-image {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #FF462D;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #e63920;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 LinkedIn Share Page Debug Tool</h1>
+    
+    <div class="section">
+        <h2>1. Meta Tags Status</h2>
+        <div id="metaStatus"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Image Accessibility Test</h2>
+        <p>Testing if LinkedIn can access the OG image...</p>
+        <div id="imageStatus"></div>
+        <img id="testImage" class="test-image" style="display:none;" />
+    </div>
+    
+    <div class="section">
+        <h2>3. All Meta Tags</h2>
+        <div id="allMetaTags"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Testing Tools</h2>
+        <p>Test this page with these tools:</p>
+        <a href="https://www.linkedin.com/post-inspector/" target="_blank" class="button">LinkedIn Post Inspector</a>
+        <a href="https://developers.facebook.com/tools/debug/" target="_blank" class="button">Facebook Debugger</a>
+        <a href="https://cards-dev.twitter.com/validator" target="_blank" class="button">Twitter Validator</a>
+    </div>
+    
+    <div class="section">
+        <h2>5. Current Page URL</h2>
+        <div class="info status">
+            <strong>Share this URL:</strong><br>
+            <code id="currentUrl"></code>
+        </div>
+    </div>
+
+    <script>
+        // Get current URL
+        document.getElementById('currentUrl').textContent = window.location.href;
+        
+        // Check meta tags
+        function checkMetaTags() {
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            const ogDescription = document.querySelector('meta[property="og:description"]');
+            const ogType = document.querySelector('meta[property="og:type"]');
+            
+            let html = '';
+            
+            if (ogImage && ogTitle && ogDescription && ogType) {
+                html += '<div class="success status">✅ All required Open Graph tags are present!</div>';
+            } else {
+                html += '<div class="error status">❌ Some Open Graph tags are missing!</div>';
+            }
+            
+            html += '<div class="meta-tag"><strong>og:image:</strong> ' + (ogImage ? ogImage.content : 'MISSING') + '</div>';
+            html += '<div class="meta-tag"><strong>og:title:</strong> ' + (ogTitle ? ogTitle.content : 'MISSING') + '</div>';
+            html += '<div class="meta-tag"><strong>og:description:</strong> ' + (ogDescription ? ogDescription.content.substring(0, 100) + '...' : 'MISSING') + '</div>';
+            html += '<div class="meta-tag"><strong>og:type:</strong> ' + (ogType ? ogType.content : 'MISSING') + '</div>';
+            
+            document.getElementById('metaStatus').innerHTML = html;
+        }
+        
+        // Test image loading
+        function testImage() {
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (!ogImage) {
+                document.getElementById('imageStatus').innerHTML = '<div class="error status">❌ No og:image meta tag found</div>';
+                return;
+            }
+            
+            const imageUrl = ogImage.content;
+            const img = document.getElementById('testImage');
+            
+            document.getElementById('imageStatus').innerHTML = '<div class="info status">⏳ Testing image URL: <code>' + imageUrl + '</code></div>';
+            
+            img.onload = function() {
+                document.getElementById('imageStatus').innerHTML = 
+                    '<div class="success status">✅ Image loads successfully! Dimensions: ' + img.naturalWidth + 'x' + img.naturalHeight + 'px</div>';
+                img.style.display = 'block';
+            };
+            
+            img.onerror = function() {
+                document.getElementById('imageStatus').innerHTML = 
+                    '<div class="error status">❌ Image failed to load! LinkedIn won\'t be able to access it.<br><strong>Possible issues:</strong><br>- Image URL is incorrect<br>- Image is not publicly accessible<br>- CORS issues<br>- Image file is corrupted</div>';
+            };
+            
+            img.src = imageUrl;
+        }
+        
+        // List all meta tags
+        function listAllMetaTags() {
+            const allMetas = document.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"]');
+            let html = '';
+            
+            allMetas.forEach(meta => {
+                const attr = meta.getAttribute('property') || meta.getAttribute('name');
+                const content = meta.getAttribute('content');
+                html += '<div class="meta-tag"><strong>' + attr + ':</strong> ' + content + '</div>';
+            });
+            
+            document.getElementById('allMetaTags').innerHTML = html;
+        }
+        
+        // Run all tests
+        checkMetaTags();
+        testImage();
+        listAllMetaTags();
+    </script>
+</body>
+</html>
